@@ -102,12 +102,23 @@ namespace ufo
       return false;
     }
 
+      bool isAapp (Expr e)
+      {
+          if (isOpX<AAPP>(e))
+              if (e->arity() > 0)
+                  if (isOpX<ADECL>(e->arg(0)))
+                      if (e->arg(0)->arity() >= 2)
+                          return true;
+          return false;
+      }
+
     void splitBody (Expr body, vector<ExprVector>& srcVars, ExprVector &srcRelations, ExprSet& lin)
     {
       getConj (body, lin);
       for (auto c = lin.begin(); c != lin.end(); )
       {
         Expr cnj = *c;
+        outs() << "Cnj: " << cnj << "\n";
         if (isOpX<FAPP>(cnj) && isOpX<FDECL>(cnj->left()))
         {
           Expr rel = cnj->arg(0);
@@ -119,7 +130,19 @@ namespace ufo
           srcVars.push_back(tmp);
           c = lin.erase(c);
         }
-        else ++c;
+        else {
+            if (isOpX<AAPP>(cnj) && isOpX<ADECL>(cnj->left()))
+          {
+              Expr rel = cnj->arg(0);
+              addDecl(rel);
+              srcRelations.push_back(rel);
+              ExprVector tmp;
+              for (auto it = cnj->args_begin()+1, end = cnj->args_end(); it != end; ++it)
+                  tmp.push_back(*it);
+              srcVars.push_back(tmp);
+              c = lin.erase(c);
+          } else ++c; }
+
       }
     }
 
@@ -228,6 +251,8 @@ namespace ufo
 
         Expr body = r->arg(0);
         Expr head = r->arg(1);
+        outs() << "Head: " << head << "\n";
+        outs() << "Body: " << body << "\n";
         vector<ExprVector> origSrcSymbs;
         ExprSet lin;
         splitBody(body, origSrcSymbs, hr.srcRelations, lin);
@@ -299,6 +324,8 @@ namespace ufo
         hr.assignVarsAndRewrite (origSrcSymbs, tmp,
                                  origDstSymbs, invVars[hr.dstRelation]);
 
+//          outs() << "Head: " << hr.head << "\n";
+        outs() << "Body 1: " << hr.body << "\n";
         if ((isOpX<TRUE>(hr.body) && !hr.isQuery) ||
             (hr.srcRelations.size() == 0 && hr.isQuery))
         {

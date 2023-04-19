@@ -356,6 +356,7 @@ namespace ufo
       if (std::find(ordered_decls.begin(), ordered_decls.end(), decl) != ordered_decls.end())
         return true;
       cur_decls.insert(decl);
+//      outs() << decl << "\n ************************ \n";
       for (auto & chc : chcs) {
         if (chc.dstRelation == decl && !chc.isFact) {
           for (int i = 0; i < chc.srcRelations.size(); i++) {
@@ -455,7 +456,14 @@ namespace ufo
       }
       // Get the possible version of return variables
       Expr cur = ordered_decls[idx];
+      outs() << "Decls:";
+      for (auto decl: ordered_decls){
+          outs() << decl << "\n ************************ \n";
+      }
       for (auto & chc : chcs) {
+        outs() << "Comparison: \n" << chc.dstRelation << "\n" << cur << "\n ************************ \n";
+
+
         if (chc.dstRelation == cur) {
           size_t vars_size = chc.dstRelation->arity();
           std::vector<int> idxs;
@@ -465,10 +473,10 @@ namespace ufo
           // add functions for filter variables here
           if (ignoreBaseVar) excludeBaseVar(cur, idxs);
           if (givePriority) givePriorityNonAdt(cur, idxs);
-           // outs() << *chc.dstRelation->left() << " " << idxs.size() << "\n";
+          outs () << *chc.dstRelation->left() << " " << idxs.size() << "\n";
           for (int i = idxs.size() - 1; i >= 0; --i) {
             buf[chc.dstRelation->left()] = idxs[i];
-            // outs() << *chc.dstRelation->left() << " " << idxs[i] << "\n";
+            outs () << *chc.dstRelation->left() << " " << idxs[i] << "\n";
             if (findInterpretations(idx + 1, buf))
               return true;
           }
@@ -481,7 +489,7 @@ namespace ufo
     bool solve() {
       // Order current uninterpreted predicate symbols
       for (auto & decl: decls) {
-        // outs() << *decl << "\n";
+        outs() << *decl << "\n";
         ExprSet cur_decls;
         if (!orderDecls(decl, cur_decls))
           return false;
@@ -583,6 +591,9 @@ namespace ufo
     ExprVector constructors;
 
     ExprSet& decls = ruleManager.decls;
+    for(auto decl: decls){
+        outs () << decl << "\n";
+    }
 
     for (auto & a : z3.getAdtConstructors()) {
       constructors.push_back(regularizeQF(a));

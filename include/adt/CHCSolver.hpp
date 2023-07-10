@@ -458,10 +458,10 @@ namespace ufo
       Expr cur = ordered_decls[idx];
       outs() << "Decls:";
       for (auto decl: ordered_decls){
-          outs() << decl << "\n ************************ \n";
+//          outs() << decl << "\n ************************ \n";
       }
       for (auto & chc : chcs) {
-        outs() << "Comparison: \n" << chc.dstRelation << "\n" << cur << "\n ************************ \n";
+//        outs() << "Comparison: \n" << chc.dstRelation << "\n" << cur << "\n ************************ \n";
 
 
         if (chc.dstRelation == cur) {

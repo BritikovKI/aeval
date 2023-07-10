@@ -189,12 +189,15 @@ namespace ufo
   Expr z3_from_smtlib_file (Z &z3, const char *fname)
   {
       z3::context &ctx = z3.get_ctx ();
-
-      Z3_ast_vector b = Z3_parse_smtlib2_file (ctx, fname, 0, NULL, NULL, 0, NULL, NULL);
+      Z3_symbol* names;
+      Z3_ast_vector b = Z3_parse_smtlib2_file (ctx, fname, 0, names, NULL, 0, NULL, NULL);
       Z3_ast* args = new Z3_ast[Z3_ast_vector_size(ctx, b)];
 
+      printf("Args size: %d \n", Z3_ast_vector_size(ctx, b));
       for (unsigned i = 0; i < Z3_ast_vector_size(ctx, b); ++i) {
           args[i] = Z3_ast_vector_get(ctx, b, i);
+          Z3_string  st = Z3_ast_to_string(ctx, args[i]);
+          printf("Ast: %d \n", st);
       }
 
       z3::ast ast (ctx, Z3_mk_and(ctx, Z3_ast_vector_size(ctx, b), args));

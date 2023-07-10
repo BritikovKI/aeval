@@ -3,6 +3,10 @@
 
 #include "ae/AeValSolver.hpp"
 
+
+// TODO: Dirty hack
+
+
 using namespace std;
 using namespace boost;
 
@@ -102,25 +106,24 @@ namespace ufo
       return false;
     }
 
-      bool isAapp (Expr e)
-      {
-          if (isOpX<AAPP>(e))
-              if (e->arity() > 0)
-                  if (isOpX<ADECL>(e->arg(0)))
-                      if (e->arg(0)->arity() >= 2)
-                          return true;
-          return false;
-      }
-
     void splitBody (Expr body, vector<ExprVector>& srcVars, ExprVector &srcRelations, ExprSet& lin)
     {
       getConj (body, lin);
       for (auto c = lin.begin(); c != lin.end(); )
       {
         Expr cnj = *c;
-        outs() << "Cnj: " << cnj << "\n";
-        if (isOpX<FAPP>(cnj) && isOpX<FDECL>(cnj->left()))
+//        outs() << "Cnj: " << cnj << "\n";
+        if (isOpX<FAPP>(cnj))
         {
+          assert(isOpX<FDECL>(cnj->left()));
+            outs() << "Cnj func: " << cnj << "\n";
+          std::string name;
+          std::stringstream str;
+          str << cnj;
+//          if(str.str() == "expr_9_1"){
+//              c = lin.erase(c);
+//              continue;
+//          }
           Expr rel = cnj->arg(0);
           addDecl(rel);
           srcRelations.push_back(rel);
@@ -130,19 +133,7 @@ namespace ufo
           srcVars.push_back(tmp);
           c = lin.erase(c);
         }
-        else {
-            if (isOpX<AAPP>(cnj) && isOpX<ADECL>(cnj->left()))
-          {
-              Expr rel = cnj->arg(0);
-              addDecl(rel);
-              srcRelations.push_back(rel);
-              ExprVector tmp;
-              for (auto it = cnj->args_begin()+1, end = cnj->args_end(); it != end; ++it)
-                  tmp.push_back(*it);
-              srcVars.push_back(tmp);
-              c = lin.erase(c);
-          } else ++c; }
-
+        else ++c;
       }
     }
 
@@ -290,8 +281,10 @@ namespace ufo
         ExprVector origDstSymbs;
         if (!hr.isQuery)
         {
-          for (auto it = head->args_begin()+1, end = head->args_end(); it != end; ++it)
+          for (auto it = head->args_begin()+1, end = head->args_end(); it != end; ++it){
+//              outs() << *it << "\n";
             origDstSymbs.push_back(*it);
+          }
         }
         allOrigSymbs.insert(allOrigSymbs.end(), origDstSymbs.begin(), origDstSymbs.end());
         //simplBoolReplCnj(allOrigSymbs, lin); // perhaps, not a very important optimization now; consider removing
@@ -341,6 +334,8 @@ namespace ufo
           if (isOpX<EQ>(cnj)) {
             Expr l = bind::fname(cnj->left());
             Expr r = bind::fname(cnj->right());
+//            outs() << "Left: " << l << "\n";
+//            outs() << "Right: " << r << "\n";
             if (std::find(constructors.begin(), constructors.end(), l) != constructors.end()) {
               for (int i = 0; i < cnj->left()->arity(); ++i) {
                 Expr var = cnj->left()->arg(i);

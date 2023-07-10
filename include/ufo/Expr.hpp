@@ -2177,7 +2177,6 @@ namespace expr
 	}
       };
       struct FAPP_PS;
-      struct AAPP_PS;
     }
     NOP_BASE(BindOp)
     
@@ -2186,10 +2185,6 @@ namespace expr
     NOP(FDECL,"fdecl",PREFIX,BindOp)
     /** Function application */
     NOP(FAPP,"fapp",bind::FAPP_PS,BindOp)
-    /** Accessor declaration */
-    NOP(ADECL,"adecl",PREFIX,BindOp)
-    /** Accessor application */
-    NOP(AAPP,"aapp",bind::AAPP_PS,BindOp)
 
     namespace bind
     {
@@ -2242,7 +2237,6 @@ namespace expr
       }
 
       inline bool isFdecl (Expr fdecl) { return isOpX<FDECL> (fdecl); }
-      inline bool isAdecl (Expr fdecl) { return isOpX<ADECL> (fdecl); }
       inline Expr fname (Expr fdecl) { return fdecl->first (); }
 
       inline Expr fapp (Expr fdecl) { return mk<FAPP> (fdecl); }
@@ -2256,14 +2250,6 @@ namespace expr
         return mknary<FAPP> (_args);
       }
 
-      template <typename Range>
-      Expr aapp (Expr adecl, const Range &args)
-      {
-            ExprVector _args;
-            _args.push_back (adecl);
-            _args.insert (_args.end (), boost::begin (args), boost::end (args));
-            return mknary<AAPP> (_args);
-      }
 
       inline Expr fapp (Expr fdecl, Expr a0, Expr a1 = Expr(), 
 			Expr a2 = Expr())
@@ -2283,8 +2269,6 @@ namespace expr
 
 
       inline bool isFapp (Expr fapp) { return isOpX<FAPP> (fapp); }
-
-      inline bool isAapp (Expr fapp) { return isOpX<AAPP> (fapp); }
       
       inline Expr rangeTy (Expr fdecl) { return fdecl->last (); }
 
@@ -2305,11 +2289,6 @@ namespace expr
         return isOpX<FDECL> (v) && isOpX<T> (rangeTy (v));
       }
 
-        template <typename T> bool isAdecl (Expr v)
-        {
-            return isOpX<ADECL> (v) && isOpX<T> (rangeTy (v));
-        }
-      
       /** constant is an applied nullary function */
       template <typename T> bool isConst (Expr v)
       {
@@ -2339,12 +2318,6 @@ namespace expr
         {
           assert (isOpX<FDECL> (v->left ()));
           return rangeTy (v->left ());
-        }
-
-        if (isOpX<AAPP> (v))
-        {
-            assert (isOpX<ADECL> (v->left ()));
-            return rangeTy (v->left ());
         }
 
         if (isOpX<ITE>(v)) return typeOf(v->last());
@@ -2409,31 +2382,6 @@ namespace expr
               if (args.size () > 1) OS << ")";
             }
 	
-      };
-
-      struct AAPP_PS {
-            static inline void print (std::ostream &OS,
-                                      int depth,
-                                      int brkt,
-                                      const std::string &name,
-                                      const std::vector<ENode*> &args)
-            {
-                if (args.size () > 1) OS << "(";
-
-                // -- strip fdecl if there is one
-                ENode *fname = args [0];
-                if (isOpX<ADECL> (fname)) fname = fname->arg (0);
-                fname->Print (OS, depth+2, false);
-
-                for (unsigned i = 1; i < args.size (); ++i)
-                {
-                    OS << " ";
-                    args [i]->Print (OS, depth+2, false);
-                }
-
-                if (args.size () > 1) OS << ")";
-            }
-
       };
       
       /// Creates a new fdecl with the same signature as the given

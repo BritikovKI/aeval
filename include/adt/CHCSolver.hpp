@@ -92,12 +92,15 @@ namespace ufo
           }
         }
       }
+      // TODO: HERE I CAN CHECK IF ACCESSOR, AND THEN DO THE REVERSE MATCHING, SO HEAD(SMTH) -> X, NOT X -> HEAD(SMTH)
       if ((elem->left()->arity() == 1) && !(isConstructor(bind::fname(elem->left())))) {
-          matching[elem->left()] = elem->right();
+          matching[elem->right()] = elem->left();
+//          matching[elem->left()] = elem->right();
           return true;
       }
       else if ((elem->right()->arity() == 1) && !(isConstructor(bind::fname(elem->right())))) {
-          matching[elem->right()] = elem->left();
+          matching[elem->left()] = elem->right();
+//          matching[elem->right()] = elem->left();
           return true;
       }
       return false;
@@ -154,10 +157,14 @@ namespace ufo
       }
       replaceDeclsInLeftPart(chc, cnj);
       cnj.push_back(chc.body);
+//      outs() << "CHC: " << chc. << "\n";
+      outs() << "CHC: " << chc.body << "\n";
       Expr asmpt = mk<IMPL>(conjoin(cnj, efac), destination);
+      outs() << "Asmpt: " << asmpt << "\n";
       while (!isOpX<EQ>(asmpt) && findMatchingFromRule(chc, matching, asmpt)) {
         asmpt = replaceAll(asmpt, matching);
         asmpt = simplifyBool(asmpt);
+//        outs() << "Asmpt: " << asmpt << "\n";
         matching.clear();
       }
       asmpt = simplifyArithm(asmpt);
@@ -195,6 +202,7 @@ namespace ufo
 
                     // we should check that this variable is inductive in inductive rule
                     for (auto & ind_chc : chcs) {
+                      outs() << "Check chc: " << ind_chc.body << "\n";
                       if (ind_chc.dstRelation == decl && !ind_chc.isFact) {
                         for (int k = 0; k < ind_chc.srcRelations.size(); ++k) {
                           if (ind_chc.srcRelations[k] == decl) {
@@ -214,6 +222,7 @@ namespace ufo
                                   if ((ind_body_elem->left() == ind_chc.dstVars[i] && ind_body_elem->right()->arity() == indConstructorArity) ||
                                     (ind_body_elem->right() == ind_chc.dstVars[i] && ind_body_elem->left()->arity() == indConstructorArity)) {
                                     shouldBeChecked = true;
+                                    break;
                                   }
                                 }
                               }

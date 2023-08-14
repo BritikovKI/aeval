@@ -1163,7 +1163,6 @@ namespace expr
     else
       {
           res = va.isChangeDoKidsRewrite () ? va.getExpr () : expr;
-//                  std::cout << "Res: " << res << "\n";
           if (res->arity () > 0)
           {
             bool changed = false;
@@ -1171,10 +1170,8 @@ namespace expr
 
             for (ENode::args_iterator b = res->args_begin (), e = res->args_end ();   b != e; ++b)
               {
-//                  std::cout << "B: " << *b << "\n";
                   Expr k = visit (v, *b, cache);
                   kids.push_back (k);
-//                  std::cout << "k: " << k << "\n";
                   changed  = (changed || k.get () != *b);
               }
 
@@ -1186,7 +1183,6 @@ namespace expr
                                    kids.end ());
                 else
                   res->renew_args (kids.begin (), kids.end ());
-                std::cout << "New res: " << res << "\n";
               }
           }
     
@@ -3051,16 +3047,7 @@ namespace expr
     }
     if (m.empty()) return exp;
     RAVALLM rav(&m);
-    int s = exp->arity();
-    std::cout << "Exp: " << exp << "\n";
     Expr tmp = dagVisit (rav, exp);
-    // TODO :: really dirty, redo
-    // TODO: Problem is in the recursive overwrite of the constructor
-    int s1 = tmp->arity();
-    std::cout << "Tmp: " << tmp << "\n";
-    if(s == s1){
-        std::cout << "Arity hasn't changed\n";
-    }
     if (tmp == exp || !rec) return tmp;
     else return replaceAll(tmp, m, rec, iter+1);
   }

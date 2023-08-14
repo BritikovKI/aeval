@@ -3,10 +3,6 @@
 
 #include "ae/AeValSolver.hpp"
 
-
-// TODO: Dirty hack
-
-
 using namespace std;
 using namespace boost;
 
@@ -112,18 +108,9 @@ namespace ufo
       for (auto c = lin.begin(); c != lin.end(); )
       {
         Expr cnj = *c;
-//        outs() << "Cnj: " << cnj << "\n";
         if (isOpX<FAPP>(cnj))
         {
           assert(isOpX<FDECL>(cnj->left()));
-            outs() << "Cnj func: " << cnj << "\n";
-          std::string name;
-          std::stringstream str;
-          str << cnj;
-//          if(str.str() == "expr_9_1"){
-//              c = lin.erase(c);
-//              continue;
-//          }
           Expr rel = cnj->arg(0);
           addDecl(rel);
           srcRelations.push_back(rel);
@@ -242,8 +229,6 @@ namespace ufo
 
         Expr body = r->arg(0);
         Expr head = r->arg(1);
-        outs() << "Head: " << head << "\n";
-        outs() << "Body: " << body << "\n";
         vector<ExprVector> origSrcSymbs;
         ExprSet lin;
         splitBody(body, origSrcSymbs, hr.srcRelations, lin);
@@ -281,10 +266,8 @@ namespace ufo
         ExprVector origDstSymbs;
         if (!hr.isQuery)
         {
-          for (auto it = head->args_begin()+1, end = head->args_end(); it != end; ++it){
-//              outs() << *it << "\n";
+          for (auto it = head->args_begin()+1, end = head->args_end(); it != end; ++it)
             origDstSymbs.push_back(*it);
-          }
         }
         allOrigSymbs.insert(allOrigSymbs.end(), origDstSymbs.begin(), origDstSymbs.end());
         //simplBoolReplCnj(allOrigSymbs, lin); // perhaps, not a very important optimization now; consider removing
@@ -317,8 +300,6 @@ namespace ufo
         hr.assignVarsAndRewrite (origSrcSymbs, tmp,
                                  origDstSymbs, invVars[hr.dstRelation]);
 
-//          outs() << "Head: " << hr.head << "\n";
-        outs() << "Body 1: " << hr.body << "\n";
         if ((isOpX<TRUE>(hr.body) && !hr.isQuery) ||
             (hr.srcRelations.size() == 0 && hr.isQuery))
         {
@@ -334,8 +315,6 @@ namespace ufo
           if (isOpX<EQ>(cnj)) {
             Expr l = bind::fname(cnj->left());
             Expr r = bind::fname(cnj->right());
-//            outs() << "Left: " << l << "\n";
-//            outs() << "Right: " << r << "\n";
             if (std::find(constructors.begin(), constructors.end(), l) != constructors.end()) {
               for (int i = 0; i < cnj->left()->arity(); ++i) {
                 Expr var = cnj->left()->arg(i);

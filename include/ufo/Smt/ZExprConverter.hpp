@@ -581,11 +581,9 @@ namespace ufo
                 auto c = Z3_get_datatype_sort_constructor(ctx, sort, num);
                 unsigned num_accessors = Z3_get_domain_size(ctx, c);
 
-                std::cout << "constructor: " << Z3_get_symbol_string(ctx, Z3_get_decl_name(ctx,c)) << " " << "\n";
                 while(num_accessors > 0){
                     num_accessors--;
                     auto as = Z3_get_datatype_sort_constructor_accessor(ctx, sort, num, num_accessors);
-                    std::cout << "accessor: " << Z3_get_symbol_string(ctx, Z3_get_decl_name(ctx,as)) << "\n";
                 }
             }
           std::string name = Z3_get_symbol_string(ctx, Z3_get_sort_name(ctx, sort));
@@ -811,14 +809,12 @@ namespace ufo
 
             Expr res = bind::fapp (unmarshal (z3::func_decl (ctx, fdecl),
                                             efac, cache, seen, adts_seen, adts, accessors), args);
-            outs() << "Datatype constructor decl: " << res << "\n";
             cache.insert (typename C::value_type (z, res));
             left = NULL;
             return res;
       }
 
       if (dkind == Z3_OP_UNINTERPRETED) {
-            printf("Func app: %s \n", Z3_get_symbol_string(ctx, Z3_get_decl_name (ctx, fdecl)));
             Expr res = bind::fapp (unmarshal (z3::func_decl (ctx, fdecl),
                       efac, cache, seen, adts_seen, adts, accessors), args);
             // -- XXX maybe use seen instead. not sure what is best.

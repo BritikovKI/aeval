@@ -473,8 +473,6 @@ namespace ufo
       // Get the possible version of return variables
       Expr cur = ordered_decls[idx];
       for (auto & chc : chcs) {
-
-
         if (chc.dstRelation == cur) {
           size_t vars_size = chc.dstRelation->arity();
           std::vector<int> idxs;

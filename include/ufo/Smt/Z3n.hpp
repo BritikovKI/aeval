@@ -1,4 +1,3 @@
-
 /**
 SeaHorn Verification Framework
 Copyright (c) 2015 Carnegie Mellon University.

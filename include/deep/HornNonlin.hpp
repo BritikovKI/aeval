@@ -89,6 +89,7 @@ namespace ufo
     Expr failDecl;
     ExprVector extras;
     vector<HornRuleExt> chcs;
+    vector<vector<HornRuleExt>> functionBasedChcs;
     int index_fact_chc;
     vector<int> index_cycle_chc;
     map<Expr, ExprVector> invVars;
@@ -114,6 +115,36 @@ namespace ufo
       return false;
     }
 
+
+    vector<HornRuleExt> getParents(HornRuleExt chc) {
+      assert(std::find_if(chcs.begin(), chcs.end(), [chc](HornRuleExt comp) { return chc.body == comp.body; }) != chcs.end());
+      if(chc.isFact) return {};
+      auto parentsExpr = chc.srcRelations;
+      printf("((((((((((((((((((\n");
+      print(chc);
+      printf("******************\n");
+      vector<HornRuleExt> parents;
+      for(HornRuleExt candidate: chcs){
+        if(std::find(parentsExpr.begin(), parentsExpr.end(), candidate.dstRelation) != parentsExpr.end() &&
+             candidate.dstRelation != chc.dstRelation){
+          print(candidate);
+          parents.push_back(candidate);
+        }
+      }
+      printf("))))))))))))))))))\n");
+      return parents;
+    }
+
+    HornRuleExt getChild(HornRuleExt const chc) {
+      assert(std::find_if(chcs.begin(), chcs.end(), [chc](HornRuleExt comp) { return chc.body == comp.body; }) != chcs.end());
+      auto parentsExpr = chc.dstRelation;
+      HornRuleExt child = *std::find_if(chcs.begin(), chcs.end(),
+                                          [parentsExpr](HornRuleExt elem){
+        return (std::find(elem.srcRelations.begin(), elem.srcRelations.end(), parentsExpr) != elem.srcRelations.end());
+      });
+
+      return child;
+    }
 
     void splitBody (HornRuleExt& hr, ExprVector& srcVars, ExprSet& lin)
     {

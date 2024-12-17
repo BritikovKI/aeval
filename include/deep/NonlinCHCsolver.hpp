@@ -578,10 +578,179 @@ namespace ufo
       return NULL;
     }
 
+    void inlineChc(std::vector<HornRuleExt> &function, HornRuleExt & chc, std::string func_name) {
+      auto head = chc.dstRelation;
+      if (std::find(chc.srcRelations.begin(), chc.srcRelations.end(), head) != chc.srcRelations.end() || chc.srcRelations.empty()) return;
+
+      auto it = chc.srcRelations.begin();
+      auto itVars = chc.srcVars.begin();
+      while(it != chc.srcRelations.end()){
+        auto source = *it;
+        string source_name = lexical_cast<string>(source);
+        int dst = source_name.find(func_name);
+        if (dst != string::npos) { it++; itVars++; continue; }
+        Expr incomingFormula = mk<FALSE> (m_efac);
+        ExprVector dstVars;
+        bool entered = false;
+        for(auto& fun: function){
+          if(fun.dstRelation == source){
+            entered = true;
+            inlineChc(function, fun, func_name);
+//            cout<<"()()()()()()()()()()()()()()()()\n";
+//            cout<<"Current head: \n";
+//            pprint(chc.head->arg(0));
+//            cout<<"Current body: \n";
+//            pprint(chc.body);
+//            cout<<"Merged source: \n";
+//            pprint(source);
+//            cout<<"Merged source body: \n";
+//            pprint(fun.body);
+//            chc.body = eliminateQuantifiers(fun.body, fun.dstVars);
+            dstVars = fun.dstVars;
+            ExprVector incomingVec = {incomingFormula, fun.body};
+            incomingFormula = disjoin(incomingVec, m_efac);
+            incomingFormula = eliminateQuantifiersExceptFor(incomingFormula, dstVars);
+//            cout<<"Quantifier op: \n";
+//            pprint(incomingFormula);
+//            for(auto srcVarsSubset: fun.srcVars) {
+//              incomingFormula = eliminateQuantifiers(incomingFormula, srcVarsSubset);
+//            }
+//            fun.dstRelation = mk<FALSE>(m_efac);
+//            cout<<"+++++++++++++++++++++++\n";
+//            pprint(fun.body);
+          }
+        }
+        ExprVector predicate_expl = {chc.body, incomingFormula};
+//        cout<<"\n-_-_-_-_-_-_-_-_-_-_-_-_-\n";
+//        pprint(chc.body);
+        assert(dstVars.size() > 0);
+        chc.body = conjoin(predicate_expl, m_efac);
+//        cout<<"CHC body post conjunction:\n";
+//        pprint(chc.body);
+        chc.body = replaceAll(chc.body, *itVars, dstVars);
+//        cout<<"CHC body post var replacement:\n";
+//        pprint(chc.body);
+        chc.body = eliminateQuantifiers(chc.body, dstVars);
+//        cout<<"CHC body post QE:\n";
+//        pprint(chc.body);
+        chc.srcRelations.erase(it);
+        chc.srcVars.erase(itVars);
+//        }
+      }
+//      chc.srcRelations = {};
+//      chc.srcVars = {};
+//      cout<<"+_+_+_+_+_+_+_+_+_+_+_+_+\n";
+//      pprint(chc.body);
+//      cout<<"********||||||||**********\n";
+    }
+
+    std::string extractFunctionName (Expr function) {
+      string pred_name = lexical_cast<string>(function);
+      std::regex pattern(R"(summary_\d+_function_([a-zA-Z0-9]+))");
+      std::smatch match;
+      std::regex_search(pred_name, match, pattern);
+      assert(match.size() == 2);
+      std::string func_name;
+      func_name.append("_").append(match[1]).append("_");
+      return func_name;
+    }
+
+    std::vector<HornRuleExt> preprocessFunction(std::vector<HornRuleExt> &function) {
+      int fun_arg = 0;
+      for (; fun_arg < function[0].srcRelations.size(); fun_arg++)
+        if (function[0].srcRelations[fun_arg] != function[0].dstRelation)
+          break;
+
+      std::string func_name = extractFunctionName(function[0].srcRelations[fun_arg]);
+      std::set<Expr> simplifiedHeads;
+      // Find CHCs to simplify
+      for (int i=0; i<function.size(); i++){
+        string destination_name = lexical_cast<string>(function[i].dstRelation);
+        int dst = destination_name.find(func_name);
+        if (dst != string::npos) {
+          for (auto src: function[i].srcRelations) {
+            string source_name = lexical_cast<string>(src);
+            int res = source_name.find(func_name);
+            if (res == string::npos) {
+              simplifiedHeads.insert(function[i].dstRelation);
+              break;
+            }
+          }
+        }
+      }
+
+      // Extracting and constructing all of the heads and bodies of the predicates
+      for(auto & chc: ruleManager.chcs) {
+        if(std::find(simplifiedHeads.begin(), simplifiedHeads.end(), chc.dstRelation) != simplifiedHeads.end()){
+          cout<< "****Pre****\n";
+          cout<< "HEAD: ";
+          pprint(chc.head);
+          cout<< "Body: ";
+          pprint(chc.body);
+          cout<< "Sources: ";
+          pprint(chc.srcRelations);
+          cout<< "\n********\n";
+          inlineChc(function, chc, func_name);
+          cout<< "****Post****\n";
+          cout<< "HEAD: ";
+          pprint(chc.head);
+          cout<< "Body: ";
+          pprint(chc.body);
+          cout<< "Sources: ";
+          pprint(chc.srcRelations);
+          cout<< "\n********\n";
+        }
+      }
+//      function.erase(std::remove_if(function.begin(), function.end(),
+//                            [](HornRuleExt chc) { return isOpX<FALSE>(chc.dstRelation); }), function.end());
+      return function;
+    }
+
+    void exploreFunctionTraces() {
+
+      std::vector<std::vector<HornRuleExt>> function_chcs;
+      // We trail through the functions found in the CHC encoding
+      // building the full set of possible traces through the function
+      for(auto func: ruleManager.index_cycle_chc) {
+        function_chcs.push_back({ruleManager.chcs[func]});
+        // getting initial parents, temporary hack because all of the functions communicate through single interface
+        // Getting the parents of the function chc
+        for (int j = 0; j < function_chcs.back().size(); j++) {
+          auto child = function_chcs.back()[j];
+          // pushing back all of the parents of the uncovered function
+          auto parents = ruleManager.getParents(child);
+          for(HornRuleExt parent: parents) {
+            if(std::find_if(function_chcs.back().begin(), function_chcs.back().end(),
+                            [parent](HornRuleExt comp) { return parent.body == comp.body; }) == function_chcs.back().end()) {
+              function_chcs.back().push_back(parent);
+            }
+          }
+        }
+        // Getting the children of core chcs
+        for (int j = 0; j < function_chcs.back().size(); j++) {
+          HornRuleExt parent = function_chcs.back()[j];
+          // pushing back all children of the uncovered function
+          if (parent.isQuery) continue;
+          auto child = ruleManager.getChild(parent);
+          if(std::find_if(function_chcs.back().begin(), function_chcs.back().end(),
+                          [child](HornRuleExt comp) { return child.body == comp.body; }) == function_chcs.back().end()) {
+            function_chcs.back().push_back(child);
+          }
+        }
+
+      }
+
+      for(auto & func: function_chcs) {
+        preprocessFunction(func);
+        ruleManager.functionBasedChcs.push_back(func);
+      }
+    }
+
     // TODO: skeleton of the new implementation
     void exploreTracesNonLinearTG(int bnd)
     {
       set<int> todoCHCs;
+      exploreFunctionTraces();
       int number_of_tests = 0;
       int chcs_original_size = ruleManager.chcs.size();
 

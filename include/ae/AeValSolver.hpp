@@ -769,6 +769,28 @@ namespace ufo
         return coreQE(tmp, qVars);
     }
 
+    template<typename Range> static Expr eliminateQuantifiersExceptFor(Expr fla, Range const & qVars, bool doArithm = true)
+    {
+      if (qVars.size() == 0) return fla;
+      ExprSet dsjs, newDsjs;
+      getDisj(fla, dsjs);
+      if (dsjs.size() > 1)
+      {
+        for (auto & d : dsjs) newDsjs.insert(eliminateQuantifiersExceptFor(d, qVars));
+        return disjoin(newDsjs, fla->getFactory());
+      }
+
+      ExprSet hardVars;
+      filter (fla, bind::IsConst (), inserter(hardVars, hardVars.begin()));
+      minusSets(hardVars, qVars);
+      ExprSet cnjs;
+      getConj(fla, cnjs);
+      constantPropagation(hardVars, cnjs, doArithm);
+      Expr tmp = simpEquivClasses(qVars, cnjs, fla->getFactory());
+      tmp = simpleQE(tmp, hardVars);
+      return coreQE(tmp, hardVars);
+    }
+
     template<typename Range> static Expr eliminateQuantifiersRepl(Expr fla, Range& vars)
     {
         ExprFactory &efac = fla->getFactory();

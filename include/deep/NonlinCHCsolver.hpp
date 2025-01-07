@@ -827,7 +827,8 @@ namespace ufo
 //            }
 //            u.dumpToFile(ssa);
 //            pprint(ssa);
-            auto res = u.isSat(ssa);
+            int x;
+            auto res = u.isSat(ssa, true, true);
             trees_checked_per_cur_bnd++;
             time_t my_time = time(NULL);
             outs () << "rq_t : " << ctime(&my_time) << "\n";
@@ -840,6 +841,7 @@ namespace ufo
               outs () << "unrolling unsat\n";
             }
             else if (true == res) {
+              u.dumpToFile(ssa);
               if (satTrees[id].size() > 0) {
                 satTrees[id].push_back(deep::chcTree::clone(t));
               } else {
@@ -948,7 +950,15 @@ namespace ufo
                 return;
               }
             }
-            else outs () << "unknown\n";
+            else {
+              //            serialize();
+//            for(auto e: ssa){
+//              outs() << "Expr: " << (*e) << "\n";
+//            }
+              u.dumpToFile(ssa);
+//              pprint(ssa);
+              outs () << "unknown\n";
+            }
           }
           for (auto t : trees){
             t->deleteTree();

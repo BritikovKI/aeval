@@ -190,12 +190,13 @@ namespace ufo
       else
       {
         lastCand = conjoin(cnjs, efac);
+//        cout<<"Formula after splitting and gathering:\n";
+//        pprint(lastCand);
         if (approxBV){
           ExprVector invAndIterVars;
           ExprMap extraVars;
           lastCand = findBVAndRewrite(lastCand,invAndIterVars,extraVars);
           invAndIterVars.push_back(lastCand);
-          dumpToFile(invAndIterVars);
         }
         smt.assertExpr(lastCand);
       }
@@ -243,7 +244,7 @@ namespace ufo
     /**
      * SMT-check
      */
-    boost::tribool isSat(Expr a, bool reset=true, bool simpBv=true)
+    boost::tribool isSat(Expr a, bool reset=true, bool simpBv=false)
     {
       ExprSet cnjs;
       getConj(a, cnjs);
@@ -259,6 +260,8 @@ namespace ufo
       while (sz < v.size())
       {
         Expr bla = v[sz];
+        cout<<"Formula before splitting and gathering:\n";
+        pprint(bla);
         if(approxBV) {
           ExprVector invAndIterVars;
           ExprMap extraVars;

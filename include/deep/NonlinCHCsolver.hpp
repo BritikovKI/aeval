@@ -596,52 +596,20 @@ namespace ufo
           if(fun.dstRelation == source){
             entered = true;
             inlineChc(function, fun, func_name);
-//            cout<<"()()()()()()()()()()()()()()()()\n";
-//            cout<<"Current head: \n";
-//            pprint(chc.head->arg(0));
-//            cout<<"Current body: \n";
-//            pprint(chc.body);
-//            cout<<"Merged source: \n";
-//            pprint(source);
-//            cout<<"Merged source body: \n";
-//            pprint(fun.body);
-//            chc.body = eliminateQuantifiers(fun.body, fun.dstVars);
             dstVars = fun.dstVars;
             ExprVector incomingVec = {incomingFormula, fun.body};
             incomingFormula = disjoin(incomingVec, m_efac);
             incomingFormula = eliminateQuantifiersExceptFor(incomingFormula, dstVars);
-//            cout<<"Quantifier op: \n";
-//            pprint(incomingFormula);
-//            for(auto srcVarsSubset: fun.srcVars) {
-//              incomingFormula = eliminateQuantifiers(incomingFormula, srcVarsSubset);
-//            }
-//            fun.dstRelation = mk<FALSE>(m_efac);
-//            cout<<"+++++++++++++++++++++++\n";
-//            pprint(fun.body);
           }
         }
         ExprVector predicate_expl = {chc.body, incomingFormula};
-//        cout<<"\n-_-_-_-_-_-_-_-_-_-_-_-_-\n";
-//        pprint(chc.body);
         assert(dstVars.size() > 0);
         chc.body = conjoin(predicate_expl, m_efac);
-//        cout<<"CHC body post conjunction:\n";
-//        pprint(chc.body);
         chc.body = replaceAll(chc.body, *itVars, dstVars);
-//        cout<<"CHC body post var replacement:\n";
-//        pprint(chc.body);
         chc.body = eliminateQuantifiers(chc.body, dstVars);
-//        cout<<"CHC body post QE:\n";
-//        pprint(chc.body);
         chc.srcRelations.erase(it);
         chc.srcVars.erase(itVars);
-//        }
       }
-//      chc.srcRelations = {};
-//      chc.srcVars = {};
-//      cout<<"+_+_+_+_+_+_+_+_+_+_+_+_+\n";
-//      pprint(chc.body);
-//      cout<<"********||||||||**********\n";
     }
 
     std::string extractFunctionName (Expr function) {
@@ -682,27 +650,9 @@ namespace ufo
       // Extracting and constructing all of the heads and bodies of the predicates
       for(auto & chc: ruleManager.chcs) {
         if(std::find(simplifiedHeads.begin(), simplifiedHeads.end(), chc.dstRelation) != simplifiedHeads.end()){
-          cout<< "****Pre****\n";
-          cout<< "HEAD: ";
-          pprint(chc.head);
-          cout<< "Body: ";
-          pprint(chc.body);
-          cout<< "Sources: ";
-          pprint(chc.srcRelations);
-          cout<< "\n********\n";
           inlineChc(function, chc, func_name);
-          cout<< "****Post****\n";
-          cout<< "HEAD: ";
-          pprint(chc.head);
-          cout<< "Body: ";
-          pprint(chc.body);
-          cout<< "Sources: ";
-          pprint(chc.srcRelations);
-          cout<< "\n********\n";
         }
       }
-//      function.erase(std::remove_if(function.begin(), function.end(),
-//                            [](HornRuleExt chc) { return isOpX<FALSE>(chc.dstRelation); }), function.end());
       return function;
     }
 
@@ -821,12 +771,6 @@ namespace ufo
             tree_map.clear();
             varCnt = 0;
             treeToSMT(t->getRoot());
-//            serialize();
-//            for(auto e: ssa){
-//              outs() << "Expr: " << (*e) << "\n";
-//            }
-//            u.dumpToFile(ssa);
-//            pprint(ssa);
             int x;
             auto res = u.isSat(ssa, true, true);
             trees_checked_per_cur_bnd++;
@@ -951,12 +895,7 @@ namespace ufo
               }
             }
             else {
-              //            serialize();
-//            for(auto e: ssa){
-//              outs() << "Expr: " << (*e) << "\n";
-//            }
               u.dumpToFile(ssa);
-//              pprint(ssa);
               outs () << "unknown\n";
             }
           }

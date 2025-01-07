@@ -120,18 +120,13 @@ namespace ufo
       assert(std::find_if(chcs.begin(), chcs.end(), [chc](HornRuleExt comp) { return chc.body == comp.body; }) != chcs.end());
       if(chc.isFact) return {};
       auto parentsExpr = chc.srcRelations;
-      printf("((((((((((((((((((\n");
-      print(chc);
-      printf("******************\n");
       vector<HornRuleExt> parents;
       for(HornRuleExt candidate: chcs){
         if(std::find(parentsExpr.begin(), parentsExpr.end(), candidate.dstRelation) != parentsExpr.end() &&
              candidate.dstRelation != chc.dstRelation){
-          print(candidate);
           parents.push_back(candidate);
         }
       }
-      printf("))))))))))))))))))\n");
       return parents;
     }
 

@@ -294,8 +294,6 @@ namespace ufo
         expr_ast_map seen_expr;
         z3::ast toAst (Expr e)
         {
-            std::cout << "Expression to marshal: \n";
-            std::cout << (e);
             return M::marshal (e, get_ctx (), cache.left, seen_expr, adts, adts_seen);
         }
         Expr toExpr (z3::ast a)
@@ -304,7 +302,6 @@ namespace ufo
 
 //            ast_expr_map seen;
             auto res = U::unmarshal (a, get_efac (), cache.right, seen_ast, adts_seen, adts, accessors);
-//            ctx = a.ctx();
             return res;
         }
 

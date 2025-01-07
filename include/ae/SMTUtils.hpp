@@ -190,8 +190,6 @@ namespace ufo
       else
       {
         lastCand = conjoin(cnjs, efac);
-//        cout<<"Formula after splitting and gathering:\n";
-//        pprint(lastCand);
         if (approxBV){
           ExprVector invAndIterVars;
           ExprMap extraVars;
@@ -260,8 +258,6 @@ namespace ufo
       while (sz < v.size())
       {
         Expr bla = v[sz];
-        cout<<"Formula before splitting and gathering:\n";
-        pprint(bla);
         if(approxBV) {
           ExprVector invAndIterVars;
           ExprMap extraVars;

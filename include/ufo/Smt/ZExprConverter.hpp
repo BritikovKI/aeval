@@ -8,6 +8,9 @@
 
 #include "ufo/ExprLlvm.hpp"
 
+
+// TODO: REWORK OF ADTS HANDLING
+
 namespace ufo
 {
 
@@ -80,7 +83,8 @@ namespace ufo
       else if (isOpX<BOOL_TY> (e))
 	res = reinterpret_cast<Z3_ast> (Z3_mk_bool_sort (ctx));
       else if (isOpX<AD_TY> (e)) {
-        res = reinterpret_cast<Z3_ast> (Z3_mk_datatype_sort(ctx, Z3_mk_string_symbol(ctx, lexical_cast<std::string>(e->left ()).c_str())));
+        res = reinterpret_cast<Z3_ast> (Z3_mk_int_sort (ctx));
+//        res = reinterpret_cast<Z3_ast> (Z3_mk_datatype_sort(ctx, Z3_mk_string_symbol(ctx, lexical_cast<std::string>(e->left ()).c_str())));
       }// GF: hack for now
       else if (isOpX<ARRAY_TY> (e))
       {
@@ -216,8 +220,6 @@ namespace ufo
 				reinterpret_cast<Z3_func_decl>
 				(static_cast<Z3_ast>
 				 (marshal (bind::fname (e), ctx, cache, seen, adts, adts_seen))));
-
-
 	  // -- marshall all arguments except for the first one
 	  // -- (which is the fdecl)
 	  std::vector<Z3_ast> args (e->arity ());
@@ -833,7 +835,8 @@ namespace ufo
 
       if (dkind == Z3_OP_DT_ACCESSOR) {
         Z3_sort srt = Z3_get_sort(ctx, z);
-        Z3_func_decl acc = Z3_get_datatype_sort_constructor_accessor(ctx, srt,1,1);
+        // TODO: CHANGE THIS HARDCODE OF ACCESSORS
+        Z3_func_decl acc = Z3_get_datatype_sort_constructor_accessor(ctx, srt, 1, 1);
         Expr res = bind::fapp (unmarshal (z3::func_decl (ctx, fdecl),
                                           efac, cache, seen, adts_seen, adts, accessors), args);
         accessors.push_back(bind::fname(res));

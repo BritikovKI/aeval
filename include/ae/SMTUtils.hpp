@@ -195,6 +195,7 @@ namespace ufo
           ExprMap extraVars;
           lastCand = findBVAndRewrite(lastCand,invAndIterVars,extraVars);
           invAndIterVars.push_back(lastCand);
+          dumpToFile(invAndIterVars);
         }
         smt.assertExpr(lastCand);
       }
@@ -242,7 +243,7 @@ namespace ufo
     /**
      * SMT-check
      */
-    boost::tribool isSat(Expr a, bool reset=true, bool simpBv=false)
+    boost::tribool isSat(Expr a, bool reset=true, bool simpBv=true)
     {
       ExprSet cnjs;
       getConj(a, cnjs);

@@ -89,7 +89,6 @@ namespace ufo
     Expr failDecl;
     ExprVector extras;
     vector<HornRuleExt> chcs;
-    vector<vector<HornRuleExt>> functionBasedChcs;
     int index_fact_chc;
     vector<int> index_cycle_chc;
     map<Expr, ExprVector> invVars;

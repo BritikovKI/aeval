@@ -579,9 +579,13 @@ namespace ufo
     }
 
     void inlineChc(std::vector<HornRuleExt> &function, HornRuleExt & chc, std::string func_name) {
-      auto head = chc.dstRelation;
-      if (std::find(chc.srcRelations.begin(), chc.srcRelations.end(), head) != chc.srcRelations.end() || chc.srcRelations.empty()) return;
+      // We check that CHC we're trying to inline is not a loop
+      if (std::find(chc.srcRelations.begin(), chc.srcRelations.end(), chc.dstRelation) != chc.srcRelations.end() || chc.srcRelations.empty()) return;
 
+      // We iterate over predicates in the CHC, inlining those which are "auxiliary"
+      // This is determined based on the function we are testing currently
+      // Currently "tested" function is provided via "func_name"
+      // (Coverage of functions called from within the "func_name" does not matter in this setting)
       auto it = chc.srcRelations.begin();
       auto itVars = chc.srcVars.begin();
       while(it != chc.srcRelations.end()){
@@ -592,6 +596,8 @@ namespace ufo
         Expr incomingFormula = mk<FALSE> (m_efac);
         ExprVector dstVars;
         bool entered = false;
+        // We iterate over the set of chcs, discovering chcs which "target" predicate is the source of simplified CHC
+        // All of the source "bodies" are disjoined and used to replace the source uninterpreted predicate
         for(auto& fun: function){
           if(fun.dstRelation == source){
             entered = true;
@@ -599,9 +605,10 @@ namespace ufo
             dstVars = fun.dstVars;
             ExprVector incomingVec = {incomingFormula, fun.body};
             incomingFormula = disjoin(incomingVec, m_efac);
-            incomingFormula = eliminateQuantifiersExceptFor(incomingFormula, dstVars);
+            incomingFormula = eliminateQuantifiersExceptForVars(incomingFormula, dstVars);
           }
         }
+        // CHC body of simplified formula is conjoined with extracted logical formula from the "source" predicates
         ExprVector predicate_expl = {chc.body, incomingFormula};
         assert(dstVars.size() > 0);
         chc.body = conjoin(predicate_expl, m_efac);
@@ -612,6 +619,8 @@ namespace ufo
       }
     }
 
+    // All of the functions in the SolCMC encoding have "summary_*" predicate at the top level of the CHCs
+    // Therefor we can extract all of the public functions, parsing CHCs in this way
     std::string extractFunctionName (Expr function) {
       string pred_name = lexical_cast<string>(function);
       std::regex pattern(R"(summary_\d+_function_([a-zA-Z0-9]+))");
@@ -619,6 +628,7 @@ namespace ufo
       std::regex_search(pred_name, match, pattern);
       assert(match.size() == 2);
       std::string func_name;
+      // Extracting the name of the function
       func_name.append("_").append(match[1]).append("_");
       return func_name;
     }
@@ -626,16 +636,17 @@ namespace ufo
     std::vector<HornRuleExt> preprocessFunction(std::vector<HornRuleExt> &function) {
       int fun_arg = 0;
       for (; fun_arg < function[0].srcRelations.size(); fun_arg++)
+        // search for the exact tested function in the "core" CHC (which contains predicates of all public funcs)
         if (function[0].srcRelations[fun_arg] != function[0].dstRelation)
           break;
 
       std::string func_name = extractFunctionName(function[0].srcRelations[fun_arg]);
       std::set<Expr> simplifiedHeads;
-      // Find CHCs to simplify
+      // Find CHCs that would need to be simplified
+      // Those are CHCs which head is a different function(it can be derived from the predicate name)
       for (int i=0; i<function.size(); i++){
         string destination_name = lexical_cast<string>(function[i].dstRelation);
-        int dst = destination_name.find(func_name);
-        if (dst != string::npos) {
+        if (destination_name.find(func_name) != string::npos) {
           for (auto src: function[i].srcRelations) {
             string source_name = lexical_cast<string>(src);
             int res = source_name.find(func_name);
@@ -647,7 +658,8 @@ namespace ufo
         }
       }
 
-      // Extracting and constructing all of the heads and bodies of the predicates
+      // Simplifying all of the discovered predicates which relate to different functions
+      // By removing uninterpreted predicates in the body and replacing them with corresponding First Order formulae
       for(auto & chc: ruleManager.chcs) {
         if(std::find(simplifiedHeads.begin(), simplifiedHeads.end(), chc.dstRelation) != simplifiedHeads.end()){
           inlineChc(function, chc, func_name);
@@ -659,15 +671,16 @@ namespace ufo
     void exploreFunctionTraces() {
 
       std::vector<std::vector<HornRuleExt>> function_chcs;
-      // We trail through the functions found in the CHC encoding
+      // Exploration of functions found in the CHC encoding
       // building the full set of possible traces through the function
       for(auto func: ruleManager.index_cycle_chc) {
         function_chcs.push_back({ruleManager.chcs[func]});
-        // getting initial parents, temporary hack because all of the functions communicate through single interface
-        // Getting the parents of the function chc
+        // getting initial parents, all of the functions communicate through single interface: index chc
+        // Therefore we can extract all of the public functions this way one by one, separating testing for them
+        // getting all of the public functions
         for (int j = 0; j < function_chcs.back().size(); j++) {
           auto child = function_chcs.back()[j];
-          // pushing back all of the parents of the uncovered function
+          // pushing back all of the possible execution traces through chcs of the uncovered function
           auto parents = ruleManager.getParents(child);
           for(HornRuleExt parent: parents) {
             if(std::find_if(function_chcs.back().begin(), function_chcs.back().end(),
@@ -690,9 +703,10 @@ namespace ufo
 
       }
 
+      // for every function we do preprocessing
+      // merging internal function calls into a single logical formula instead of a tree
       for(auto & func: function_chcs) {
         preprocessFunction(func);
-        ruleManager.functionBasedChcs.push_back(func);
       }
     }
 
@@ -771,7 +785,6 @@ namespace ufo
             tree_map.clear();
             varCnt = 0;
             treeToSMT(t->getRoot());
-            int x;
             auto res = u.isSat(ssa, true, true);
             trees_checked_per_cur_bnd++;
             time_t my_time = time(NULL);

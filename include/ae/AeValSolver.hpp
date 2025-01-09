@@ -769,14 +769,14 @@ namespace ufo
         return coreQE(tmp, qVars);
     }
 
-    template<typename Range> static Expr eliminateQuantifiersExceptFor(Expr fla, Range const & qVars, bool doArithm = true)
+    template<typename Range> static Expr eliminateQuantifiersExceptForVars(Expr fla, Range const & qVars, bool doArithm = true)
     {
       if (qVars.size() == 0) return fla;
       ExprSet dsjs, newDsjs;
       getDisj(fla, dsjs);
       if (dsjs.size() > 1)
       {
-        for (auto & d : dsjs) newDsjs.insert(eliminateQuantifiersExceptFor(d, qVars));
+        for (auto & d : dsjs) newDsjs.insert(eliminateQuantifiersExceptForVars(d, qVars));
         return disjoin(newDsjs, fla->getFactory());
       }
 

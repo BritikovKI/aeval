@@ -662,7 +662,21 @@ namespace ufo
       // By removing uninterpreted predicates in the body and replacing them with corresponding First Order formulae
       for(auto & chc: ruleManager.chcs) {
         if(std::find(simplifiedHeads.begin(), simplifiedHeads.end(), chc.dstRelation) != simplifiedHeads.end()){
+          std::cout << "CHC before being merged: \n";
+          std::cout << "Body: \n";
+          pprint(chc.body);
+          std::cout << "Incoming UP: \n";
+          pprint(chc.srcRelations);
+          std::cout << "\nHead: \n";
+          pprint(chc.dstRelation);
           inlineChc(function, chc, func_name);
+          std::cout << "CHC after being merged: \n";
+          std::cout << "Body: \n";
+          pprint(chc.body);
+          std::cout << "Incoming UP: \n";
+          pprint(chc.srcRelations);
+          std::cout << "\nHead: \n";
+          pprint(chc.dstRelation);
         }
       }
       return function;

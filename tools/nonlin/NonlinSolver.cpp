@@ -152,6 +152,7 @@ int main (int argc, char ** argv)
     bool lmax = getBoolValue(OPT_LMAX, false, argc, argv);
 
     // All other attrs are inherited from FreqHorn:
+    bool help = getBoolValue(OPT_HELP, false, argc, argv);
     int max_attempts = getIntValue(OPT_MAX_ATTEMPTS, 10, argc, argv);
     int to = getIntValue(OPT_TO, 1000, argc, argv);
     bool densecode = getBoolValue(OPT_GET_FREQS, false, argc, argv);
@@ -168,6 +169,10 @@ int main (int argc, char ** argv)
     bool d_d = getBoolValue(OPT_D3, false, argc, argv);
     bool d_s = getBoolValue(OPT_D4, false, argc, argv);
     int debug = getIntValue(OPT_DEBUG, 0, argc, argv);
+
+    if (help) {
+      // TODO: write help message
+    }
 
     if (do_disj && (!d_p && !d_d))
     {

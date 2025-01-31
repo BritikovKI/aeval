@@ -42,12 +42,13 @@ namespace ufo
             ;
         }
 
-      SMTUtils (ExprFactory& _efac, ExprVector& _accessors, unsigned _to, std::vector<Expr> adts, std::vector<std::string> adts_seen) :
+      SMTUtils (ExprFactory& _efac, ExprVector& _accessors, unsigned _to, std::vector<Expr> adts, std::vector<std::string> adts_seen, std::map<std::string, std::vector<Z3_func_decl>> constructors) :
               efac(_efac), z3(efac), smt (z3, _to), can_get_model(0), m(NULL)
       {
 
         z3.adts = adts;
         z3.adts_seen = adts_seen;
+        z3.constructors = constructors;
         for(auto b : _accessors)
           if (b->arity() == 3)
             accessors.insert(b);

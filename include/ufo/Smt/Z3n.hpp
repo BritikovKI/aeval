@@ -286,6 +286,7 @@ namespace ufo
     public:
         std::vector<Expr> adts;
         std::vector<std::string> adts_seen;
+        std::map<std::string, std::vector<Z3_func_decl>> constructors;
 
     protected:
         z3::context &get_ctx () { return ctx; }
@@ -294,14 +295,14 @@ namespace ufo
         expr_ast_map seen_expr;
         z3::ast toAst (Expr e)
         {
-            return M::marshal (e, get_ctx (), cache.left, seen_expr, adts, adts_seen);
+            return M::marshal (e, get_ctx (), cache.left, seen_expr, adts, adts_seen, constructors);
         }
         Expr toExpr (z3::ast a)
         {
             if (!a) return Expr();
 
 //            ast_expr_map seen;
-            auto res = U::unmarshal (a, get_efac (), cache.right, seen_ast, adts_seen, adts, accessors);
+            auto res = U::unmarshal (a, get_efac (), cache.right, seen_ast, adts_seen, adts, accessors, constructors);
             return res;
         }
 

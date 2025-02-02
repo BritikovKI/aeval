@@ -286,7 +286,7 @@ namespace ufo
     public:
         std::vector<Expr> adts;
         std::vector<std::string> adts_seen;
-        std::map<std::string, std::vector<Z3_func_decl>> constructors;
+        std::map<std::string, std::vector<Z3_constructor>> constructors;
 
     protected:
         z3::context &get_ctx () { return ctx; }

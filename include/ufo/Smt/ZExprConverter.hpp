@@ -42,7 +42,7 @@ namespace ufo
   {
     template <typename C>
     static z3::ast marshal (Expr e, z3::context &ctx,
-			    C &cache, expr_ast_map &seen, std::vector<Expr> adts, std::vector<std::string> &adts_seen, std::map<std::string, std::vector<Z3_func_decl>> &constructors)
+			    C &cache, expr_ast_map &seen, std::vector<Expr> adts, std::vector<std::string> &adts_seen, std::map<std::string, std::vector<Z3_constructor>> &constructors)
     {
       assert (e);
       if (isOpX<TRUE>(e)) return z3::ast (ctx, Z3_mk_true (ctx));
@@ -82,7 +82,7 @@ namespace ufo
 //        res = reinterpret_cast<Z3_ast> (Z3_mk_int_sort (ctx));
         std::string name = lexical_cast<std::string>(e->left());
         Z3_symbol z3_name = Z3_mk_string_symbol(ctx, name.c_str());
-        Z3_func_decl csts [constructors[name].size()];
+        Z3_constructor csts [constructors[name].size()];
         for(int i = 0; i<constructors[name].size(); i++){
           csts[i] = constructors[name][i];
         }
@@ -539,7 +539,7 @@ namespace ufo
     template <typename C>
     static Expr unmarshal (const z3::ast &z,
                            ExprFactory &efac, C &cache, ast_expr_map &seen,
-                           std::vector<std::string> &adts_seen, std::vector<Expr> &adts, std::vector<Expr> &accessors, std::map<std::string, std::vector<Z3_func_decl>> &constructors)
+                           std::vector<std::string> &adts_seen, std::vector<Expr> &adts, std::vector<Expr> &accessors, std::map<std::string, std::vector<Z3_constructor>> &constructors)
     {
       z3::context &ctx = z.ctx ();
 
@@ -599,24 +599,38 @@ namespace ufo
         case Z3_DATATYPE_SORT:
         {
           unsigned num = Z3_get_datatype_sort_num_constructors(ctx, sort);
-          std::vector<Z3_func_decl> dt_constructors;
+          std::vector<Z3_constructor> dt_constructors;
           std::string name = Z3_get_symbol_string(ctx, Z3_get_sort_name(ctx, sort));
           while (num > 0) {
             num--;
             auto c = Z3_get_datatype_sort_constructor(ctx, sort, num);
-            dt_constructors.push_back(c);
             unsigned num_accessors = Z3_get_domain_size(ctx, c);
-            Z3_Constructor const = Z3_mk_constructor(ctx,
-                                                     Z3_get_sort_name(ctx, sort),
-                                                     Z3_get_decl_name(ctx, c),
-                                                     Z3_get_arity(ctx, c),
-                                                     )
-
+            std::vector<Z3_symbol> names;
+            std::vector<Z3_sort> sorts;
             while(num_accessors > 0){
               num_accessors--;
               auto as = Z3_get_datatype_sort_constructor_accessor(ctx, sort, num, num_accessors);
+              names.push_back( Z3_get_decl_name(ctx, as));
+              sorts.push_back( Z3_get_sort(ctx, Z3_func_decl_to_ast(ctx, as)));
             }
+            Z3_symbol names_array[names.size()];
+            Z3_sort sorts_array[sorts.size()];
+            for(unsigned i = 0; i < names.size(); ++i){
+              names_array[i] = names[i];
+              sorts_array[i] = sorts[i];
+            }
+
+            Z3_constructor constr = Z3_mk_constructor(ctx,
+                                                     Z3_get_sort_name(ctx, sort),
+                                                     Z3_get_decl_name(ctx, c),
+                                                     Z3_get_arity(ctx, c),
+                                                     names_array,
+                                                     sorts_array,
+                                                      {}
+                                                     );
+            dt_constructors.push_back (constr);
           }
+
           constructors.insert({name, dt_constructors});
           Expr adt_name = mkTerm<std::string> (name, efac);
           if (find(adts_seen.begin(), adts_seen.end(), name) == adts_seen.end())

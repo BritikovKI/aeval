@@ -79,14 +79,14 @@ namespace ufo
       else if (isOpX<BOOL_TY> (e))
 	res = reinterpret_cast<Z3_ast> (Z3_mk_bool_sort (ctx));
       else if (isOpX<AD_TY> (e)) {
-//        res = reinterpret_cast<Z3_ast> (Z3_mk_int_sort (ctx));
+        // res = reinterpret_cast<Z3_ast> (Z3_mk_int_sort (ctx));
         std::string name = lexical_cast<std::string>(e->left());
         Z3_symbol z3_name = Z3_mk_string_symbol(ctx, name.c_str());
-        Z3_constructor csts [constructors[name].size()];
-        for(int i = 0; i<constructors[name].size(); i++){
-          csts[i] = constructors[name][i];
-        }
-        Z3_mk_datatype(ctx, z3_name, unsigned(constructors[name].size()), csts);
+        // Z3_constructor csts [constructors[name].size()];
+        // for(int i = 0; i<constructors[name].size(); i++){
+          // csts[i] = constructors[name][i];
+        // }
+        // Z3_mk_datatype(ctx, z3_name, unsigned(constructors[name].size()), csts);
         Z3_sort typeDt = Z3_mk_datatype_sort(ctx, z3_name);
 //        auto kind = Z3_get_sort_kind(ctx, typeDt);
         auto consts = Z3_get_datatype_sort_num_constructors(ctx, typeDt);

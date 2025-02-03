@@ -274,7 +274,6 @@ namespace ufo
                 z3::ast_ptr_equal_to> > cache_type;
 
         ExprFactory& efac;
-        z3::context ctx;
 
         cache_type cache;
 
@@ -284,6 +283,8 @@ namespace ufo
         }
 
     public:
+
+        z3::context ctx;
         std::vector<Expr> adts;
         std::vector<std::string> adts_seen;
         std::map<std::string, std::vector<Z3_constructor>> constructors;

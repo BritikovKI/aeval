@@ -88,9 +88,13 @@ namespace ufo
         }
         Z3_mk_datatype(ctx, z3_name, unsigned(constructors[name].size()), csts);
         Z3_sort typeDt = Z3_mk_datatype_sort(ctx, z3_name);
-//        res = reinterpret_cast<Z3_ast> (typeDt);
 //        auto kind = Z3_get_sort_kind(ctx, typeDt);
         auto consts = Z3_get_datatype_sort_num_constructors(ctx, typeDt);
+        auto c = Z3_get_datatype_sort_constructor(ctx, typeDt, 0);
+        unsigned num_accessors = Z3_get_domain_size(ctx, c);
+
+        std::string name_DT = Z3_get_symbol_string(ctx, Z3_get_sort_name(ctx,typeDt));
+        res = reinterpret_cast<Z3_ast> (typeDt);
         printf("Post reinterpret: %s\n", Z3_ast_to_string(ctx, res));
       }// GF: hack for now
       else if (isOpX<ARRAY_TY> (e))
@@ -607,17 +611,27 @@ namespace ufo
             unsigned num_accessors = Z3_get_domain_size(ctx, c);
             std::vector<Z3_symbol> names;
             std::vector<Z3_sort> sorts;
+            std::vector<unsigned> dt_sorts;
+            int j = 0;
             while(num_accessors > 0){
               num_accessors--;
-              auto as = Z3_get_datatype_sort_constructor_accessor(ctx, sort, num, num_accessors);
+              auto as = Z3_get_datatype_sort_constructor_accessor(ctx, sort, num, j);
               names.push_back( Z3_get_decl_name(ctx, as));
               sorts.push_back( Z3_get_sort(ctx, Z3_func_decl_to_ast(ctx, as)));
+              if(Z3_get_sort_kind(ctx, sorts.back()) == Z3_DATATYPE_SORT){
+                dt_sorts.push_back(num_accessors);
+              }
+              j++;
             }
             Z3_symbol names_array[names.size()];
             Z3_sort sorts_array[sorts.size()];
+            unsigned dtsorts_array[dt_sorts.size()];
             for(unsigned i = 0; i < names.size(); ++i){
               names_array[i] = names[i];
               sorts_array[i] = sorts[i];
+              if(i<dt_sorts.size()){
+                dtsorts_array[i] = dt_sorts[i];
+              }
             }
 
             Z3_constructor constr = Z3_mk_constructor(ctx,
@@ -626,7 +640,7 @@ namespace ufo
                                                      Z3_get_arity(ctx, c),
                                                      names_array,
                                                      sorts_array,
-                                                      {}
+                                                      dtsorts_array
                                                      );
             dt_constructors.push_back (constr);
           }

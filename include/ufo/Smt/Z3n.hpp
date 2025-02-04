@@ -274,6 +274,7 @@ namespace ufo
                 z3::ast_ptr_equal_to> > cache_type;
 
         ExprFactory& efac;
+        z3::context ctx;
 
         cache_type cache;
 
@@ -282,12 +283,6 @@ namespace ufo
             Z3_set_ast_print_mode (ctx, Z3_PRINT_SMTLIB2_COMPLIANT);
         }
 
-    public:
-
-        z3::context ctx;
-        std::vector<Expr> adts;
-        std::vector<std::string> adts_seen;
-        std::map<std::string, std::vector<Z3_constructor>> constructors;
 
     protected:
         z3::context &get_ctx () { return ctx; }
@@ -296,14 +291,14 @@ namespace ufo
         expr_ast_map seen_expr;
         z3::ast toAst (Expr e)
         {
-            return M::marshal (e, get_ctx (), cache.left, seen_expr, adts, adts_seen, constructors);
+            return M::marshal (e, get_ctx (), cache.left, seen_expr);
         }
         Expr toExpr (z3::ast a)
         {
             if (!a) return Expr();
 
 //            ast_expr_map seen;
-            auto res = U::unmarshal (a, get_efac (), cache.right, seen_ast, adts_seen, adts, accessors, constructors);
+            auto res = U::unmarshal (a, get_efac (), cache.right, seen_ast, accessors);
             return res;
         }
 
@@ -354,7 +349,6 @@ namespace ufo
             return out.str ();
         }
 
-        ExprVector& getAdtConstructors(){ return adts; }
         ExprVector& getAdtAccessors(){ return accessors; }
 
         template <typename Range>

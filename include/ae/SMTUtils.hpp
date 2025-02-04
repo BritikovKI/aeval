@@ -15,7 +15,7 @@ namespace ufo
   private:
 
     ExprFactory &efac;
-    EZ3 z3;
+    EZ3& z3;
     ZSolver<EZ3> smt;
     bool can_get_model;
     ZSolver<EZ3>::Model* m;
@@ -24,14 +24,15 @@ namespace ufo
 
   public:
 
-    SMTUtils (ExprFactory& _efac) :
-        efac(_efac), z3(efac), smt (z3), can_get_model(0), m(NULL) {}
 
-    SMTUtils (ExprFactory& _efac, unsigned _to) :
-        efac(_efac), z3(efac), smt (z3, _to), can_get_model(0), m(NULL) {}
+    SMTUtils (ExprFactory& _efac, EZ3& _z3) :
+        efac(_efac), z3(_z3), smt (z3), can_get_model(0), m(NULL) {}
 
-    SMTUtils (ExprFactory& _efac, ExprVector& _accessors, unsigned _to, bool _bv) :
-        efac(_efac), z3(efac), smt (z3, _to), can_get_model(0), m(NULL)
+    SMTUtils (ExprFactory& _efac, EZ3& _z3, unsigned _to) :
+        efac(_efac), z3(_z3), smt (z3, _to), can_get_model(0), m(NULL) {}
+
+    SMTUtils (ExprFactory& _efac, EZ3& _z3, ExprVector& _accessors, unsigned _to, bool _bv) :
+        efac(_efac), z3(_z3), smt (z3, _to), can_get_model(0), m(NULL)
         {
           approxBV = _bv;
           for(auto b : _accessors)
@@ -42,12 +43,9 @@ namespace ufo
             ;
         }
 
-      SMTUtils (ExprFactory& _efac, ExprVector& _accessors, unsigned _to, std::vector<Expr> adts, std::vector<std::string> adts_seen) :
-              efac(_efac), z3(efac), smt (z3, _to), can_get_model(0), m(NULL)
+      SMTUtils (ExprFactory& _efac, EZ3& _z3, ExprVector& _accessors, unsigned _to) :
+              efac(_efac), z3(_z3), smt (z3, _to), can_get_model(0), m(NULL)
       {
-
-        z3.adts = adts;
-        z3.adts_seen = adts_seen;
         for(auto b : _accessors)
           if (b->arity() == 3)
             accessors.insert(b);

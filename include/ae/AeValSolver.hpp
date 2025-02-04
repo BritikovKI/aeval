@@ -49,7 +49,7 @@ namespace ufo
                 efac(s->getFactory()),
                 z3(efac),
                 smt (z3),
-                u(efac),
+                u(efac,z3),
                 fresh_var_ind(0),
                 partitioning_size(0),
                 debug(0)
@@ -794,7 +794,8 @@ namespace ufo
     template<typename Range> static Expr eliminateQuantifiersRepl(Expr fla, Range& vars)
     {
         ExprFactory &efac = fla->getFactory();
-        SMTUtils u(efac);
+        EZ3 ez3(efac);
+        SMTUtils u(efac, ez3);
         ExprSet complex;
         findComplexNumerics(fla, complex);
         ExprMap repls;
@@ -831,7 +832,8 @@ namespace ufo
     inline static Expr abduce (Expr goal, Expr assm)
     {
         ExprFactory &efac = goal->getFactory();
-        SMTUtils u(efac);
+        EZ3 ez3(efac);
+        SMTUtils u(efac, ez3);
         ExprSet complex;
         findComplexNumerics(assm, complex);
         findComplexNumerics(goal, complex);

@@ -71,7 +71,7 @@ namespace ufo
 
       NonlinCHCsolver(CHCs &r, map<string, map<string,vector<string>>> & s) :
         m_efac(r.m_efac), ruleManager(r),
-        u(m_efac, r.m_z3.getAdtAccessors(), 10000, r.m_z3.adts, r.m_z3.adts_seen), signature(s) {}
+        u(m_efac, r.m_z3, r.m_z3.getAdtAccessors(), 10000), signature(s) {}
 
       bool checkAllOver(bool checkQuery = false) {
           for (auto &hr: ruleManager.chcs) {
